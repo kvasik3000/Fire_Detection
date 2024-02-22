@@ -6,8 +6,8 @@ from mmap import mmap, ACCESS_READ
 DATASET_PATH = Path("/ssd/babenko/fire-detection/datasets/fire_proc")
 
 TARGET_FOLDERS = ["test", "train", "valid"]
-FOLDER_INSIDE  = ["images"]
-SUB_FOLDER     = ["labels"]
+FOLDER_INSIDE = ["images"]
+SUB_FOLDER = ["labels"]
 
 hash_table = {}
 
@@ -17,7 +17,7 @@ for folder in TARGET_FOLDERS:
     deleted = 0
     for target, sub in zip(FOLDER_INSIDE, SUB_FOLDER):
         target_path = DATASET_PATH / folder / target
-        sub_path    = DATASET_PATH / folder /  sub
+        sub_path = DATASET_PATH / folder / sub
         files = os.listdir(target_path)
 
         for file in files:
@@ -25,7 +25,9 @@ for folder in TARGET_FOLDERS:
             labelname, _ = os.path.splitext(file)
             label_path = sub_path / (labelname + ".txt")
 
-            with open(image_path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+            with open(image_path) as file, mmap(
+                file.fileno(), 0, access=ACCESS_READ
+            ) as file:
                 hashmd5 = md5(file).hexdigest()
 
             val = hash_table.get(hashmd5, None)
@@ -38,5 +40,7 @@ for folder in TARGET_FOLDERS:
             else:
                 hash_table.update({hashmd5: (image_path, label_path, folder)})
                 saved += 1
-            
-    print(f"[{folder}] Proccesed: {saved+deleted} | Saved: {saved} | Deleted: {deleted}/ FromOther: {fromother}")
+
+    print(
+        f"[{folder}] Proccesed: {saved+deleted} | Saved: {saved} | Deleted: {deleted}/ FromOther: {fromother}"
+    )

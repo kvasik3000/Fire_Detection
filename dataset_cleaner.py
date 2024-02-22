@@ -25,7 +25,7 @@ for folder in FOLDERS:
             with open(file_path, "r") as f:
                 line = f.readline()
                 class_name = line.split(" ")[0]
-                bbox_data  = " ".join(line.split(" ")[1:])
+                bbox_data = " ".join(line.split(" ")[1:])
                 newname = CLASSES_RENAME.get(class_name, None)
                 if newname:
                     file_data += newname + " " + bbox_data + "\n"
