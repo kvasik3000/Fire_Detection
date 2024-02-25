@@ -18,7 +18,6 @@ from tqdm import tqdm
 
 from sklearn.metrics.pairwise import cosine_similarity
 
-from fiftyone import ViewField as F
 import fiftyone.zoo as foz
 import fiftyone as fo
 
@@ -30,7 +29,10 @@ class YOLO_Dataset(Dataset):
     При необходимости может работать с отдельной частью датасета.
     Автоматически находит статистику по указанной части датасета и позволяет проверить нормализацию.
     """
-    def __init__(self, dataset_dir: str, part: Optional[Literal['train', 'val', 'test', 'all']] = 'all', **transform_kwargs):
+    def __init__(self, 
+                 dataset_dir: str, 
+                 part: Optional[Literal['train', 'val', 'test', 'all']] = 'all', 
+                 **transform_kwargs):
         """
         Parameters
         ---------- 
@@ -44,11 +46,12 @@ class YOLO_Dataset(Dataset):
         transform_kwargs
             Параметры для преобразования изображений перед работой с ними.    
         """ 
-
         self.dataset_dir = dataset_dir
         self.part = part
 
         self.resize_size = transform_kwargs.get('resize', 640)
+        self.mean = transform_kwargs.get('mean')
+        self.std = transform_kwargs.get('std')
 
         if isinstance(self.resize_size, int):
             self.resize_size = (self.resize_size, self.resize_size)
@@ -81,16 +84,12 @@ class YOLO_Dataset(Dataset):
         part: ['train', 'val', 'test', 'all']
             Часть датасета, с которой будет работать класс.  
         """ 
-
         if part == 'all':
             self.images = np.concatenate([self.images_paths[key] for key in self.images_paths.keys()], axis = 0)
         else:
             self.images = self.images_paths[part] 
-
-        # Нахождение статистики по указанной части датасета
-        self.mean, self.std = self.find_statistic()
     
-    def find_statistic(self, transform = None):
+    def find_statistic(self, transform = None, save: bool = True):
         """
         Находит среднее и стандартное отклонение по указанной части датасета.
 
@@ -98,6 +97,9 @@ class YOLO_Dataset(Dataset):
         ---------- 
         transform
             Преобразование изображений перед поиском статистики.
+
+        save: bool
+            Нужно ли сохранить в классе крассчитанную статистику.
 
         Returns
         ---------- 
@@ -127,8 +129,14 @@ class YOLO_Dataset(Dataset):
         mean /= cnt
         std  = torch.sqrt(std / cnt - mean ** 2) 
 
+        if save:          
+            self.mean = mean
+            self.std = std
+
+            self.transform = self._update_transform(self.mean, self.std)
+
         return mean, std
-    
+
     def check_normalization(self, mean: ArrayLike = None, std: ArrayLike = None):
         """
         Показывает среднее и стандартное отклонение после нормализации указанной части датасета.
@@ -136,24 +144,34 @@ class YOLO_Dataset(Dataset):
         Parameters
         ---------- 
         mean: ArrayLike
-            Среднее для нормализации. Если None, то используется автоматически
-            рассчитанное.
+            Среднее для нормализации. Если None, то используется сохраненное.
 
         std: ArrayLike
-            Стандартное отклонение для нормализации. Если None, то используется автоматически
-            рассчитанное.
+            Стандартное отклонение для нормализации. Если None, то используется сохраненное.
         """    
-
         mean = self.mean if mean is None else mean
         std  = self.std if std is None else std
+
+        assert mean is not None and std is not None, 'Необходимо сначала рассчитать статистику!'
 
         print(f'Текущее mean = {mean}')
         print(f'Текущее std = {std}')
 
-        mean, std = self.find_statistic(self.transform)
+        mean, std = self.find_statistic(self._update_transform(mean, std), save = False)
 
         print(f'mean после нормализации = {mean}')
         print(f'std после нормализации = {std}')
+
+    def _update_transform(self, mean: ArrayLike = None, std: ArrayLike = None):
+
+        new_transform = self.transform
+
+        for idx, transform in enumerate(new_transform.transforms):
+            if isinstance(transform, v2.Normalize):
+                new_transform.transforms[idx] = v2.Normalize(mean, std)
+                break
+
+        return new_transform
 
     def __getitem__(self, id):
 
