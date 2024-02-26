@@ -214,6 +214,7 @@ class Duplicates_handler:
         dataset: YOLO_Dataset
             Экземпляр класса YOLO_Dataset.
         """ 
+        self.no_yolo = dataset.no_yolo
         self.dataset = fo.Dataset.from_images(dataset.images)
 
         for sample in tqdm(self.dataset, desc = 'Присвоение тегов'):
@@ -271,7 +272,10 @@ class Duplicates_handler:
     def delete_duplicates(self):
         
         for path in self.samples_to_remove: 
-            os.remove(Path(path.replace('images', 'labels', 1)).with_suffix('.txt'))
+
+            if not self.no_yolo:
+                os.remove(Path(path.replace('images', 'labels', 1)).with_suffix('.txt'))
+                
             os.remove(path)
         
         print(f'Удалено {len(list(self.samples_to_remove))} изображений')
