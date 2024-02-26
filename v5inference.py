@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 
 # Load a model
-model = YOLO('F:/Programming/Fire-detection/weights/v5200.pt')
+model = YOLO('weights/v5200.pt')
 # model.to("cuda")
 
 VIDEO_PATH = "fire001_speedup_zipped.mp4"
