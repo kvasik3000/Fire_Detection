@@ -1,4 +1,5 @@
 import os
+
 from tqdm.auto import tqdm
 
 DATASET_FOLDER = "/ssd/babenko/fire-detection/datasets/fire_1"
@@ -11,9 +12,7 @@ TARGET_FOLDERS = ["labels"]
 #     "1": "0",
 # }
 
-CLASSES_RENAME = {
-    "1": "0"
-}
+CLASSES_RENAME = {"1": "0"}
 
 for folder in FOLDERS:
     for target in TARGET_FOLDERS:
@@ -24,12 +23,12 @@ for folder in FOLDERS:
             file_path = os.path.join(folder_path, file)
             file_data = ""
             with open(file_path, "r") as f:
-                while(True):
+                while True:
                     line = f.readline().strip()
                     if line == "":
                         break
                     class_name = line.split(" ")[0]
-                    bbox_data  = " ".join(line.split(" ")[1:])
+                    bbox_data = " ".join(line.split(" ")[1:])
                     newname = CLASSES_RENAME.get(class_name, None)
                     if newname:
                         file_data += newname + " " + bbox_data + "\n"
