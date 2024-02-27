@@ -35,7 +35,7 @@
 
 ---
 
-‌### Pre-commit
+‌Pre-commit
 
 Для установки и работы pre-commit hooks
 
@@ -44,3 +44,5 @@ pip install pre-commit
 
 pre-commit install
 ```
+
+---
