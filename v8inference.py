@@ -1,8 +1,8 @@
-from ultralytics import YOLO
 import cv2
+from ultralytics import YOLO
 
 # Load a model
-model = YOLO('weights/v8200ep.pt')
+model = YOLO("weights/v8200ep.pt")
 # model.to("cuda")
 
 VIDEO_PATH = "fire002_zipped.mp4"
@@ -17,11 +17,11 @@ total_frames = int(video_stream_in.get(7))
 
 
 video_stream_out = cv2.VideoWriter(
-        filename=video_output,
-        fourcc=0x7634706D,
-        fps=framerate,
-        frameSize=(video_width, video_height),
-    )
+    filename=video_output,
+    fourcc=0x7634706D,
+    fps=framerate,
+    frameSize=(video_width, video_height),
+)
 
 
 while video_stream_in.isOpened():
