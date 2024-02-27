@@ -14,7 +14,7 @@
 + Scrum master: [Квас Андрей](https://github.com/kvasik3000)
 + ML: [Володина Софья](https://github.com/PiroJOJO) , [Бабенко Егор](https://github.com/JooudDoo)
 + ML-Ops: [Лейсле Александр](https://github.com/HerrPhoton)
-+ Ops: [Сичкарь Иван](https://github.com/SichkarIvan) 
++ Ops: [Сичкарь Иван](https://github.com/SichkarIvan)
 + QA: [Шитенко Алина](https://github.com/alincnl)
 
 ---
@@ -33,5 +33,16 @@
 
 Экономические выгоды: Своевременное обнаружение возгорания снизит убытки, связанные с разрушением имущества и прерыванием производства.
 
+---
 
-‌
+‌Pre-commit
+
+Для установки и работы pre-commit hooks
+
+```bash
+pip install pre-commit
+
+pre-commit install
+```
+
+---
