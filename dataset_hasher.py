@@ -26,9 +26,7 @@ for folder in TARGET_FOLDERS:
             labelname, _ = os.path.splitext(file)
             label_path = sub_path / (labelname + ".txt")
 
-            with open(image_path) as file, mmap(
-                file.fileno(), 0, access=ACCESS_READ
-            ) as file:
+            with open(image_path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
                 hashmd5 = md5(file).hexdigest()
 
             val = hash_table.get(hashmd5, None)
@@ -42,6 +40,4 @@ for folder in TARGET_FOLDERS:
                 hash_table.update({hashmd5: (image_path, label_path, folder)})
                 saved += 1
 
-    print(
-        f"[{folder}] Proccesed: {saved+deleted} | Saved: {saved} | Deleted: {deleted}/ FromOther: {fromother}"
-    )
+    print(f"[{folder}] Proccesed: {saved+deleted} | Saved: {saved} | Deleted: {deleted}/ FromOther: {fromother}")

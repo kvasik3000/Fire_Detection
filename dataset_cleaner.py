@@ -22,7 +22,7 @@ for folder in FOLDERS:
         for file in tqdm(files):
             file_path = os.path.join(folder_path, file)
             file_data = ""
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 while True:
                     line = f.readline().strip()
                     if line == "":
