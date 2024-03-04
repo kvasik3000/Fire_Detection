@@ -42,7 +42,8 @@ video_stream_out.release()
 # import cv2
 
 # # Load a model
-# model = torch.hub.load("ultralytics/yolov5", 'custom', path="F:/Programming/Fire-detection/weights/v5100.pt", force_reload=True)
+# model = torch.hub.load("ultralytics/yolov5", 'custom',
+# path="F:/Programming/Fire-detection/weights/v5100.pt", force_reload=True)
 # # model.load_state_dict(torch.load("F:/Programming/Fire-detection/weights/v5100.pt"))
 # model.to("cuda")
 
