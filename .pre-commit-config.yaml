@@ -2,9 +2,11 @@ repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
+      - id: check-ast
       - id: check-yaml
       - id: check-toml
       - id: check-json
+      - id: check-xml
       - id: check-ast
       - id: fix-byte-order-marker
       - id: end-of-file-fixer
@@ -17,17 +19,23 @@ repos:
       - id: debug-statements
       - id: detect-private-key
       - id: no-commit-to-branch
+      - id: requirements-txt-fixer
+        language_version: python3.10
         args:
           [
             "-b=develop",
             "-b=master",
           ]
+
 - repo: https://github.com/psf/black
-  rev: 23.11.0
+  rev: 24.2.0
   hooks:
     - id: black
+    - id: black-jupyter
+      language_version: python3.10
+
 - repo: https://github.com/PyCQA/isort
-  rev: 5.12.0
+  rev: 5.13.2
   hooks:
     - id: isort
       args:
@@ -35,4 +43,29 @@ repos:
           "--force-single-line-imports",
           "--ensure-newline-before-comments",
           "--line-length=120",
+          "--profile", "black",
         ]
+
+- repo: https://github.com/PyCQA/flake8
+  rev: 7.0.0
+  hooks:
+    - id: flake8
+      language_version: python3.10
+
+- repo: https://github.com/asottile/pyupgrade
+  rev: 3.51.1
+  hooks:
+    - id: pyupgrade
+      language_version: python3.10
+      args: ["--py37-plus"]
+
+- repo: https://github.com/hadialqattan/pycln
+    rev: v2.4.0
+    hooks:
+      - id: pycln
+
+- repo: https://github.com/myint/docformatter
+    rev: v1.7.5
+    hooks:
+      - id: docformatter
+        args: [--in-place, --black]
