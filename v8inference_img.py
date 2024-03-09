@@ -222,7 +222,7 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    args = args.__dict__()
+    args = args.__dict__
 
     if args["compress_video"]:
         try:
