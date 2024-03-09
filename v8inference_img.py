@@ -208,7 +208,7 @@ def image_inference(
     annotated_frame = results[0].plot()
 
     if output_path:
-        cv2.imwrite(output_path, annotated_frame)
+        cv2.imwrite(str(output_path), annotated_frame)
 
         txt_output = str(output_path).rsplit(".", maxsplit=1)[0]
         txt_output += ".txt"
