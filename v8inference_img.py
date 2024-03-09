@@ -9,6 +9,7 @@ from subprocess import CalledProcessError
 from subprocess import check_output
 from subprocess import run
 
+from tqdm.auto import tqdm
 
 import cv2
 from ultralytics import YOLO
@@ -106,19 +107,19 @@ def folder_inferece(
         )
 
     for ext in processing_extensions:
-        for file in input_path.rglob(f"*{ext}"):
+        for file in tqdm(input_path.rglob(f"*{ext}"), desc=f"Parsing: \"{ext}\""):
             if ext in SUPPORTED_VIDEO_EXTS:
                 video_inference(
                     model,
                     model_conf,
                     file,
-                    output_path / file.stem / file.suffix,
+                    output_path / (str(file.stem) + file.suffix),
                     compress=kwargs["compress_video"],
                     compress_overwrite=kwargs["compress_overwrite"],
                 )
             elif ext in SUPPORTED_IMAGE_EXTS:
                 image_inference(
-                    model, model_conf, file, output_path / file.stem / file.suffix
+                    model, model_conf, file, output_path / (str(file.stem) + file.suffix)
                 )
 
 
@@ -204,7 +205,7 @@ def image_inference(
     if isinstance(image, Path):
         image = cv2.cvtColor(cv2.imread(str(image)), cv2.COLOR_BGR2RGB)
 
-    results = model(image, conf=model_conf)
+    results = model(image, conf=model_conf, verbose=False)
     annotated_frame = results[0].plot()
 
     if output_path:
@@ -214,6 +215,10 @@ def image_inference(
         txt_output += ".txt"
 
         results[0].save_txt(txt_output, save_conf=False)
+        
+        if not os.path.isfile(txt_output):
+            with open(txt_output, 'w') as f:
+                f.write("")
 
     return annotated_frame, results
 
