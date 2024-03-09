@@ -112,13 +112,13 @@ def folder_inferece(
                     model,
                     model_conf,
                     file,
-                    file.replace(input_path, output_path),
+                    output_path / file.stem / file.suffix,
                     compress=kwargs["compress_video"],
                     compress_overwrite=kwargs["compress_overwrite"],
                 )
             elif ext in SUPPORTED_IMAGE_EXTS:
                 image_inference(
-                    model, model_conf, file, output_path / file.stem
+                    model, model_conf, file, output_path / file.stem / file.suffix
                 )
 
 
