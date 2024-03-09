@@ -202,7 +202,7 @@ def image_inference(
         os.makedirs(output_path_root, exist_ok=True)
 
     if isinstance(image, Path):
-        image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(cv2.imread(str(image)), cv2.COLOR_BGR2RGB)
 
     results = model(image, conf=model_conf)
     annotated_frame = results[0].plot()
