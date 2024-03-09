@@ -4,6 +4,11 @@ from pathlib import Path
 from typing import Literal
 from typing import Union
 from typing import Optional
+import contextlib
+from subprocess import CalledProcessError
+from subprocess import check_output
+from subprocess import run
+
 
 import cv2
 from ultralytics import YOLO
@@ -68,6 +73,14 @@ def parse_args():
         help="Compress video after inference using h264 codec and ffmpeg",
     )
 
+    parser.add_argument(
+        "--compress-overwrite",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Overwrite compressed video",
+    )
+
     return parser.parse_args()
 
 
@@ -101,19 +114,45 @@ def folder_inferece(
                     file,
                     file.replace(input_path, output_path),
                     compress=kwargs["compress_video"],
+                    compress_overwrite=kwargs["compress_overwrite"],
                 )
             elif ext in SUPPORTED_IMAGE_EXTS:
                 image_inference(
                     model, model_conf, file, file.replace(input_path, output_path)
                 )
 
+def compress_function(input: Path, output: Path, overwrite: bool = False):
+    with open("/dev/null", "w") as dummy_f:
+        with contextlib.redirect_stdout(dummy_f):
+            arguments = [
+                "ffmpeg",
+                "-i",
+                input,
+                "-vcodec",
+                "h264",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-crf",
+                "28",
+                output,
+            ]
+            if overwrite:
+                arguments.append("-y")
+            run(arguments)
+
 
 def video_inference(
-    model, model_conf: float, video_path: Path, output_path: Path, compress: bool
+    model, model_conf: float, video_path: Path, output_path: Path, compress: bool, compress_overwrite: bool
 ):
 
     output_path_root = output_path.parent
     os.makedirs(output_path_root, exist_ok=True)
+
+    if compress:
+        original_video_path = video_path
+        video_path = str(video_path).rsplit(".", maxsplit=1)[0]
+        video_path += "_.mp4"
 
     video_stream_in = cv2.VideoCapture(str(video_path))
 
@@ -139,6 +178,10 @@ def video_inference(
 
     video_stream_in.release()
     video_stream_out.release()
+
+    if compress:
+        compress_function(video_path, original_video_path, compress_overwrite)
+        os.remove(video_path)
 
 
 def image_inference(
@@ -174,5 +217,12 @@ if __name__ == "__main__":
     args = parse_args()
 
     args = args.__dict__()
+
+    if args["compress_video"]:
+        try:
+            check_output(["which", "ffmpeg"])
+        except CalledProcessError:
+            print(f"ffmpeg was not found. Compression cannot be done.")
+            args["compress_video"] = False
 
     folder_inferece(**args)
