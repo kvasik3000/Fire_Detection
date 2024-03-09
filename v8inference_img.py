@@ -121,6 +121,7 @@ def folder_inferece(
                     model, model_conf, file, file.replace(input_path, output_path)
                 )
 
+
 def compress_function(input: Path, output: Path, overwrite: bool = False):
     with open("/dev/null", "w") as dummy_f:
         with contextlib.redirect_stdout(dummy_f):
@@ -143,7 +144,12 @@ def compress_function(input: Path, output: Path, overwrite: bool = False):
 
 
 def video_inference(
-    model, model_conf: float, video_path: Path, output_path: Path, compress: bool, compress_overwrite: bool
+    model,
+    model_conf: float,
+    video_path: Path,
+    output_path: Path,
+    compress: bool,
+    compress_overwrite: bool,
 ):
 
     output_path_root = output_path.parent
