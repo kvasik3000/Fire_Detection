@@ -45,7 +45,7 @@ def parse_args():
 
     parser.add_argument(
         "-conf",
-        "--conf-th",
+        "--model-conf",
         type=float,
         default=0.3,
         help="Model confidence threshold",
