@@ -1,72 +1,178 @@
 import argparse
 import os
+from pathlib import Path
+from typing import Literal
+from typing import Union
+from typing import Optional
 
 import cv2
 from ultralytics import YOLO
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-m",
-    "--model-path",
-    type=str,
-    required=True,
-    help="Path to model",
-)
+SUPPORTED_VIDEO_EXTS = [".mp4"]
+SUPPORTED_IMAGE_EXTS = [".jpg", ".png", ".jpeg"]
 
-parser.add_argument(
-    "-imgs",
-    "--images-path",
-    type=str,
-    required=True,
-    help="Path to folder with input images",
-)
 
-parser.add_argument(
-    "-o",
-    "--output-path",
-    type=str,
-    required=True,
-    help="Path to folder for saving images",
-)
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-m",
+        "--model-path",
+        type=str,
+        required=True,
+        help="Path to model",
+    )
 
-parser.add_argument(
-    "-conf",
-    "--conf-th",
-    type=float,
-    default=0.3,
-    help="Model confidence threshold",
-)
+    parser.add_argument(
+        "-i",
+        "--input-path",
+        type=Path,
+        required=True,
+        help="Path to folder with data",
+    )
 
-args = parser.parse_args()
+    parser.add_argument(
+        "-o",
+        "--output-path",
+        type=Path,
+        required=True,
+        help="Path to folder for saving images",
+    )
 
-# Load a model
-model = YOLO(args.model_path)
+    parser.add_argument(
+        "-conf",
+        "--conf-th",
+        type=float,
+        default=0.3,
+        help="Model confidence threshold",
+    )
 
-IMAGE_FOLDER = args.images_path
-IMAGE_OUTPUT_FOLDER = args.output_path
+    parser.add_argument(
+        "-t",
+        "--target",
+        type=str,
+        default="all",
+        choices=[
+            "all",
+            "video",
+            "img",
+        ],
+        help="Which files process",
+    )
 
-os.makedirs(IMAGE_OUTPUT_FOLDER, exist_ok=True)
+    parser.add_argument(
+        "-cv",
+        "--compress-video",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Compress video after inference using h264 codec and ffmpeg",
+    )
 
-images = sorted(os.listdir(IMAGE_FOLDER))
-images = [image for image in images if image.endswith((".jpg", ".jpeg", ".png"))]
+    return parser.parse_args()
 
-for image in images:
-    
-    IMAGE_PATH = os.path.join(IMAGE_FOLDER, image)
-    image_output = os.path.join(IMAGE_OUTPUT_FOLDER, image)
 
-    rgb_image = cv2.cvtColor(cv2.imread(IMAGE_PATH),cv2.COLOR_BGR2RGB)
+def folder_inferece(
+    model_path: str,
+    model_conf: float,
+    input_path: Path,
+    output_path: Path,
+    target: Literal["all", "video", "img"],
+    **kwargs,
+):
+    model = YOLO(model_path)
 
-    results = model(rgb_image, conf=args.conf_th)
+    os.makedirs(output_path, exist_ok=True)
+
+    processing_extensions = []
+    processing_extensions += SUPPORTED_VIDEO_EXTS if target in ["all", "video"] else []
+    processing_extensions += SUPPORTED_IMAGE_EXTS if target in ["all", "img"] else []
+
+    if processing_extensions == []:
+        raise AttributeError(
+            f'The required file types are not specified, possibly an error in: "{target}"'
+        )
+
+    for ext in processing_extensions:
+        for file in input_path.rglob(f"*{ext}"):
+            if ext in SUPPORTED_VIDEO_EXTS:
+                video_inference(
+                    model,
+                    model_conf,
+                    file,
+                    file.replace(input_path, output_path),
+                    compress=kwargs["compress_video"],
+                )
+            elif ext in SUPPORTED_IMAGE_EXTS:
+                image_inference(
+                    model, model_conf, file, file.replace(input_path, output_path)
+                )
+
+
+def video_inference(
+    model, model_conf: float, video_path: Path, output_path: Path, compress: bool
+):
+
+    output_path_root = output_path.parent
+    os.makedirs(output_path_root, exist_ok=True)
+
+    video_stream_in = cv2.VideoCapture(str(video_path))
+
+    video_width = int(video_stream_in.get(3))
+    video_height = int(video_stream_in.get(4))
+    framerate = int(video_stream_in.get(5))
+    total_frames = int(video_stream_in.get(7))
+
+    video_stream_out = cv2.VideoWriter(
+        filename=output_path,
+        fourcc=0x7634706D,
+        fps=framerate,
+        frameSize=(video_width, video_height),
+    )
+
+    while True:
+        success, frame = video_stream_in.read()
+        if success:
+            annotated_frame, _ = image_inference(model, model_conf, image=frame)
+            video_stream_out.write(annotated_frame)
+        else:
+            break
+
+    video_stream_in.release()
+    video_stream_out.release()
+
+
+def image_inference(
+    model,
+    model_conf: float,
+    image: Union[Path, cv2.Mat],
+    output_path: Optional[Path] = None,
+):
+
+    if output_path:
+        output_path_root = output_path.parent
+        os.makedirs(output_path_root, exist_ok=True)
+
+    if isinstance(image, Path):
+        image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)
+
+    results = model(image, conf=model_conf)
     annotated_frame = results[0].plot()
-    print(results)
-    
-    name, ext = os.path.splitext(image_output)
-    txt_output = name + ".txt"
-    results[0].save_txt(txt_output, save_conf=False)
-    
-    if not os.path.isfile(txt_output):
-        with open(txt_output, 'w') as f:
-            f.write("No objects detected")
-    
-    cv2.imwrite(image_output, annotated_frame)
+
+    if output_path:
+        cv2.imwrite(output_path, annotated_frame)
+
+        txt_output = str(output_path).rsplit(".", maxsplit=1)[0]
+        txt_output += ".txt"
+
+        results[0].save_txt(txt_output, save_conf=False)
+
+    return annotated_frame, results
+
+
+if __name__ == "__main__":
+
+    args = parse_args()
+
+    args = args.__dict__()
+
+    folder_inferece(**args)
