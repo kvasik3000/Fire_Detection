@@ -118,7 +118,7 @@ def folder_inferece(
                 )
             elif ext in SUPPORTED_IMAGE_EXTS:
                 image_inference(
-                    model, model_conf, file, output_path / file.stem()
+                    model, model_conf, file, output_path / file.stem
                 )
 
 
