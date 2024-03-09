@@ -1,19 +1,22 @@
 import argparse
 import os
-import shutil
+import random
 import tempfile
 from pathlib import Path
 from typing import Literal
 from typing import Optional
+from typing import Union
 
-import fiftyone as fo
 import fiftyone.zoo as foz
+import albumentations as A
+import fiftyone as fo
 import numpy as np
 import torch
-import torchvision.transforms as v2
-from numpy.typing import ArrayLike
 from PIL import Image
+from torchvision.transforms import transforms
+from torchvision.transforms import v2
 from sklearn.metrics.pairwise import cosine_similarity
+from numpy.typing import ArrayLike
 from tqdm import tqdm
 
 
@@ -76,14 +79,6 @@ class Dataset_Handler:
         if isinstance(self.resize_size, int):
             self.resize_size = (self.resize_size, self.resize_size)
 
-        self.transform = v2.Compose(
-            [
-                v2.Resize(self.resize_size),
-                v2.ToTensor(),
-                v2.Normalize(mean=self.mean, std=self.std),
-            ]
-        )
-
     def change_split(self, split: Literal["train", "val", "test", "all"]):
         """Изменяет выбранную часть YOLO-датасета для дальнейшей работы.
 
@@ -97,7 +92,7 @@ class Dataset_Handler:
         else:
             self.images = self.dataset.select_by("tags", [split]).values("filepath")
 
-    def find_statistic(self, transform=None, save: bool = True):
+    def find_statistic(self, transform: Union[v2.Compose, transforms.Compose, A.Compose] = None, save: bool = True):
         """Находит среднее и стандартное отклонение по датасету.
 
         Parameters
@@ -125,8 +120,13 @@ class Dataset_Handler:
             transform = v2.Compose([v2.Resize(self.resize_size), v2.ToTensor()])
 
         for image_path in tqdm(self.images, desc="Расчёт статистики"):
+            image = Image.open(image_path).convert("RGB")
 
-            image = transform(Image.open(image_path).convert("RGB"))
+            if isinstance(transform, A.Compose):
+                image = transform(image = np.array(image))['image']  
+                image = Image.fromarray(image)                   
+            else: 
+                image = transform(image)
 
             mean += image.sum(axis=[1, 2])
             std += (image**2).sum(axis=[1, 2])
@@ -137,8 +137,6 @@ class Dataset_Handler:
         if save:
             self.mean = mean
             self.std = std
-
-            self.transform = self._update_transform(self.mean, self.std)
 
             print(f"mean = {mean}")
             print(f"std = {std}")
@@ -164,7 +162,8 @@ class Dataset_Handler:
         print(f"Текущее mean = {cur_mean}")
         print(f"Текущее std = {cur_std}")
 
-        mean, std = self.find_statistic(self._update_transform(cur_mean, cur_std), save=False)
+        transform = v2.Compose([v2.Resize(self.resize_size), v2.ToTensor(), v2.Normalize(cur_mean, cur_std)])
+        mean, std = self.find_statistic(transform, save=False)
 
         print(f"mean после нормализации = {mean}")
         print(f"std после нормализации = {std}")
@@ -244,63 +243,53 @@ class Dataset_Handler:
 
         print(f"Количество удаленных изображений {len(self.duplicates)}")
 
-    def show_duplicates(self, use_app: bool = True):
+    def show_duplicates(self):
         """Визуализация найденных дубликатов.
-
-        Parameters
-        ----------
-        use_app: bool
-            Использовать приложение FiftyOne для визуализации, либо matplotlib.
         """
-        if use_app:
-            view = self.dataset.sort_by("duplicate_id", reverse=True)
-            fo.launch_app(self.dataset, view=view)
+        view = self.dataset.sort_by("duplicate_id", reverse=True)
+        fo.launch_app(self.dataset, view=view)
 
-    def show_augmentations(self, transform, use_app: bool = True):
+    def show_augmentations(self, transform: Union[v2.Compose, transforms.Compose, A.Compose], existing_dir: str = None, seed: int = None):
         """Визуализация датасета с примененными аугментациями.
 
         Parameters
         ----------
-        transform
+        transform: Compose
             Аугментации для применения к датасету.
+
+        existing_dir: str
+            Визуализирует изображения из указанной директории (без применения аугментаций).
+
+        seed: int
+            Сид для возпроизведения аугментаций. 
         """
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+            torch.manual_seed(seed)
 
-        self.dir_path = tempfile.mkdtemp(dir=".")
+        if existing_dir is None:
 
-        for path in tqdm(self.images):
-            image = Image.open(path).convert("RGB")
-            image = transform(image)
+            tmp_path = tempfile.mkdtemp(dir=".")
 
-            sample_name = os.path.basename(path)
-            image.save(os.path.join(self.dir_path, sample_name))
+            for path in tqdm(self.images):  
+                image = Image.open(path).convert("RGB")
 
-        if use_app:
-            augmented_dataset = fo.Dataset.from_images_dir(self.dir_path)
-            fo.launch_app(augmented_dataset)
+                if isinstance(transform, A.Compose):
+                    image = transform(image = np.array(image))['image']  
+                    image = Image.fromarray(image)
+                else: 
+                    image = transform(image)
 
-    def remove_temp(self):
-        """Удаление временной директории с аугментированными изображениями."""
-        shutil.rmtree(self.dir_path)
+                sample_name = os.path.basename(path)
+                image.save(os.path.join(tmp_path, sample_name))
 
-    def _update_transform(self, mean: ArrayLike, std: ArrayLike):
-        """Обновляет значения среднего и стандартного отклонения в списке трансформаций.
+            augmented_dataset = fo.Dataset.from_images_dir(tmp_path)
 
-        Parameters
-        ----------
-        mean: ArrayLike
-            Среднее для нормализации.
+        else:
+            augmented_dataset = fo.Dataset.from_images_dir(existing_dir)
 
-        std: ArrayLike
-            Стандартное отклонение для нормализации.
-        """
-        new_transform = self.transform
-
-        for idx, transform in enumerate(new_transform.transforms):
-            if isinstance(transform, v2.Normalize):
-                new_transform.transforms[idx] = v2.Normalize(mean, std)
-                break
-
-        return new_transform
+        fo.launch_app(augmented_dataset)
 
     def __len__(self):
         return len(self.images)
@@ -309,33 +298,78 @@ class Dataset_Handler:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(add_help=True)
 
-    parser.add_argument("--delete_duplicates", action="store_true", help="Удалить дубликаты")
-    parser.add_argument("--find_statistic", action="store_true", help="Рассчитать статистику")
     parser.add_argument(
-        "--check_normalization", action="store_true", help="Проверить нормализацию с рассчитанной или заданной статистикой"
-    )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Выводить информацию об удаленных дубликатах")
-    parser.add_argument("-m", "--mean", type=float, nargs="*", dest="mean", help="Среднее для нормализации", default=None)
+        "--delete_duplicates", 
+        action="store_true", 
+        help="Удалить дубликаты"
+        )
+    
     parser.add_argument(
-        "-s", "--std", type=float, nargs="*", dest="std", help="Стандартное отклонение для нормализации", default=None
-    )
-    parser.add_argument("-p", "--path", type=str, dest="path", help="Путь целовой директории", default=None)
-    parser.add_argument("--yolo_dir", action="store_true", help="Считать целевую директорию датасетом YOLO", default=False)
+        "--find_statistic", 
+        action="store_true", 
+        help="Рассчитать статистику"
+        )
+    
+    parser.add_argument(
+        "--check_normalization", 
+        action="store_true", 
+        help="Проверить нормализацию с рассчитанной или заданной статистикой"
+        )
+    
+    parser.add_argument(
+        "-v", "--verbose", 
+        action="store_true", 
+        help="Выводить информацию об удаленных дубликатах"
+        )
+
+    parser.add_argument(
+        "-m", "--mean", 
+        type=float, 
+        nargs="*",
+        dest="mean", 
+        help="Среднее для нормализации", 
+        default=None
+        )
+    
+    parser.add_argument(
+        "-s", "--std", 
+        type=float, 
+        nargs="*", 
+        dest="std", 
+        help="Стандартное отклонение для нормализации", 
+        default=None
+        )
+    
+    parser.add_argument(
+        "-p", "--path", 
+        type=str, 
+        dest="path", 
+        help="Путь целовой директории", 
+        default=None
+        )
+    
+    parser.add_argument(
+        "--yolo_dir", 
+        action="store_true", 
+        help="Считать целевую директорию датасетом YOLO", 
+        default=False
+        )
+    
     parser.add_argument(
         "--yolo_split",
         type=str,
         dest="split",
         help='Часть датасета YOLO для работы с ней: ["train", "val", "test", "all"]',
         default="all",
-    )
+        )
+
     parser.add_argument(
-        "-t",
-        "--treshold",
+        "-t", "--treshold",
         type=float,
         dest="treshold",
         help="Порог косинусного расстояния для определения дубликатов",
         default=0.99,
-    )
+        )
 
     args = parser.parse_args()
 
