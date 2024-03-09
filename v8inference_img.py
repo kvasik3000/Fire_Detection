@@ -169,7 +169,7 @@ def video_inference(
     total_frames = int(video_stream_in.get(7))
 
     video_stream_out = cv2.VideoWriter(
-        filename=output_path,
+        filename=str(output_path),
         fourcc=0x7634706D,
         fps=framerate,
         frameSize=(video_width, video_height),
@@ -187,8 +187,8 @@ def video_inference(
     video_stream_out.release()
 
     if compress:
-        compress_function(video_path, original_video_path, compress_overwrite)
-        os.remove(video_path)
+        compress_function(str(video_path), str(original_video_path), compress_overwrite)
+        os.remove(str(video_path))
 
 
 def image_inference(
