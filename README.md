@@ -6,9 +6,10 @@
 
 ---
 
-<img src = "https://img.shields.io/badge/Python 3.10-006C6B?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=python&logoColor=FFFFFF"> <img src ='https://img.shields.io/github/repo-size/kvasik3000/Fire_Detection?style=for-the-badge&color=FABB22&labelColor=%96CEB4&logo=weightsandbiases&logoColor=96CEB4'> <img src = 'https://img.shields.io/github/contributors/kvasik3000/Fire_Detection?style=for-the-badge&color=3C7270&labelColor=%23006C6B&logo=teamspeak&logoColor=FFFFFF'>  
+<img src = "https://img.shields.io/badge/Python 3.10-006C6B?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=python&logoColor=FFFFFF"> <img src ='https://img.shields.io/github/repo-size/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=weightsandbiases&logoColor=FFFFFF'> <img src = 'https://img.shields.io/github/commit-activity/m/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=Alwaysdata&logoColor=FFFFFF'> <img src = 'https://img.shields.io/github/watchers/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=exercism&logoColor=FFFFFF'>  <img src = 'https://img.shields.io/github/contributors/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=teamspeak&logoColor=FFFFFF'>  
+
 <details>
-  <summary><h1>Контент</h1></summary>
+  <summary><h2>Контент</h2></summary>
   <ol>
     <li>
       <a>О проекте</a>
@@ -21,6 +22,7 @@
       <a href="#Решение"> Решение проекта </a>
       <ul>
         <li><a href="#Загрузка-проекта">Загрузка проекта</a></li>
+       <li><a href='#Работа-с-проектом'>Работа с проектом</a></li> 
        <li><a href='#Оценка-модели'>Оценка модели</a></li> 
        <li><a href='#Результат-работы-модели'>Результат работы модели</a></li> 
       </ul>
@@ -71,14 +73,37 @@
 
 ### Загрузка проекта
 
-Рекомендованная версия Python 3.9.0
+Рекомендованная версия Python 3.9
 + Клонируйте репозиторий нижеприведенной командой:
 ```
-git clone https://github.com/PiroJOJO/Potholes_Detection
+git clone https://github.com/kvasik3000/Fire_Detection
 ```
 + Откройте папку и установите необходимые библиотеки командой ниже:
 ```
 pip install -r requirements.txt
+```
+
+### Работа с проектом 
+
+Для запуска на изображении или на директории с изображениями используйте image_inference.py, который находится в директории inference
+
+```bash
+python .\inference\image_inference.py --images <path/to/image> -m .\models\garbage.onnx
+```
+
+Для запуска на видео или на директории с видео используйте video_inference.py, который находится в директории inference
+
+```bash
+python .\inference\video_inference.py --videos <path/to/video> -m .\models\garbage.onnx
+```
+
+Дополнительные параметры можно посмотреть, добавив --help.
+
+```bash
+python .\inference\image_inference.py --help
+```
+```bash
+python .\inference\video_inference.py --help
 ```
 
 ### Оценка модели
