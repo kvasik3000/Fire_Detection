@@ -6,7 +6,7 @@
 
 ---
 
-<img src = "https://img.shields.io/badge/Python 3.10-006C6B?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=python&logoColor=FFFFFF"> <img src ='https://img.shields.io/github/repo-size/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=weightsandbiases&logoColor=FFFFFF'> <img src = 'https://img.shields.io/github/commit-activity/m/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=Alwaysdata&logoColor=FFFFFF'> <img src = 'https://img.shields.io/github/watchers/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=exercism&logoColor=FFFFFF'>  <img src = 'https://img.shields.io/github/contributors/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=teamspeak&logoColor=FFFFFF'>  
+<img src = "https://img.shields.io/badge/Python 3.9-006C6B?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=python&logoColor=FFFFFF"> <img src ='https://img.shields.io/github/repo-size/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=weightsandbiases&logoColor=FFFFFF'> <img src = 'https://img.shields.io/github/commit-activity/m/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=Alwaysdata&logoColor=FFFFFF'> <img src = 'https://img.shields.io/github/watchers/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=exercism&logoColor=FFFFFF'>  <img src = 'https://img.shields.io/github/contributors/kvasik3000/Fire_Detection?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=teamspeak&logoColor=FFFFFF'>  
 
 <details>
   <summary><h2>Контент</h2></summary>
@@ -85,25 +85,23 @@ pip install -r requirements.txt
 
 ### Работа с проектом 
 
-Для запуска на изображении или на директории с изображениями используйте image_inference.py, который находится в директории inference
+Для запуска модели огня на директории с изображениями/видео используйте v8inference_img.py, который находится в директории inference
 
 ```bash
-python .\inference\image_inference.py --images <path/to/image> -m .\models\garbage.onnx
+python .\inference\v8inference_img.py -m .\models\fire.onnx -i <path/to/data> -o <path/to/output/dir>
 ```
+ИЛИ
 
-Для запуска на видео или на директории с видео используйте video_inference.py, который находится в директории inference
+Для запуска модели дыма
 
 ```bash
-python .\inference\video_inference.py --videos <path/to/video> -m .\models\garbage.onnx
+python .\inference\v8inference_img.py -m .\models\smoke.onnx -i <path/to/data> -o <path/to/output/dir>
 ```
 
 Дополнительные параметры можно посмотреть, добавив --help.
 
 ```bash
-python .\inference\image_inference.py --help
-```
-```bash
-python .\inference\video_inference.py --help
+python .\inference\v8inference_img.py --help
 ```
 
 ### Оценка модели
