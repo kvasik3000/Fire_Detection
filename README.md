@@ -2,7 +2,7 @@
 
 ---
 
-<img src = "https://github.com/kvasik3000/Fire_Detection/blob/main/images/fire.jpg">
+<img src = "https://github.com/kvasik3000/Fire_Detection/blob/main/images/fire.jpg" width = 1000px height = 360px align='center'>
 
 ---
 
