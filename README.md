@@ -6,7 +6,7 @@
 
 ---
 
-<img src = "https://img.shields.io/badge/Python 3.10-006C6B?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=python&logoColor=FFFFFF">  <img src ='https://img.shields.io/github/repo-size/PiroJOJO/Potholes_Detection?style=for-the-badge&color=FABB22&labelColor=%96CEB4&logo=weightsandbiases&logoColor=96CEB4'> <img src = 'https://img.shields.io/github/contributors/HerrPhoton/Water_drop_detection?style=for-the-badge&color=3C7270&labelColor=%23006C6B&logo=teamspeak&logoColor=FFFFFF'>  
+<img src = "https://img.shields.io/badge/Python 3.10-006C6B?style=for-the-badge&color=3a3b3a&labelColor=%3a3b3a&logo=python&logoColor=FFFFFF"> <img src ='https://img.shields.io/github/repo-size/kvasik3000/Fire_Detection?style=for-the-badge&color=FABB22&labelColor=%96CEB4&logo=weightsandbiases&logoColor=96CEB4'> <img src = 'https://img.shields.io/github/contributors/kvasik3000/Fire_Detection?style=for-the-badge&color=3C7270&labelColor=%23006C6B&logo=teamspeak&logoColor=FFFFFF'>  
 <details>
   <summary><h1>Контент</h1></summary>
   <ol>
